@@ -45,19 +45,20 @@ function onScanSuccess(decodedText) {
   })
     .then(res => res.json())
     .then(data => {
+      // 無論後端回傳什麼，前端顯示「姓名 + 打卡成功」
       if (data.status === "success") {
-        statusEl.textContent = data.message;
+        statusEl.textContent = `${employeeName} 打卡成功`;
         statusEl.className = "status success";
-        beepSound.play(); // 播放提示音
+        beepSound.play();
       } else {
-        statusEl.textContent = "打卡失敗，請重試";
+        statusEl.textContent = `${employeeName} 打卡失敗，請重試`;
         statusEl.className = "status error";
       }
       restartBtn.hidden = false;
     })
     .catch(err => {
       console.error(err);
-      statusEl.textContent = "打卡失敗，請重試";
+      statusEl.textContent = `${employeeName} 打卡失敗，請重試`;
       statusEl.className = "status error";
       restartBtn.hidden = false;
     });
