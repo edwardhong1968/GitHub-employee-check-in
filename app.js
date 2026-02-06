@@ -23,12 +23,17 @@ const SERVER_URL = "https://你的後端公開網址";
 
 const html5QrCode = new Html5Qrcode("reader");
 
-// 停止掃描器
+/** 停止掃描器 */
 async function stopScanner() {
-  await html5QrCode.stop().catch(err => console.warn("掃描器停止失敗:", err));
+  try {
+    await html5QrCode.stop();
+    console.log("掃描器已停止");
+  } catch (err) {
+    console.warn("掃描器停止失敗或已停止:", err);
+  }
 }
 
-// 啟動掃描器
+/** 啟動掃描器 */
 function startScanner() {
   statusEl.textContent = "等待掃描...";
   statusEl.className = "status";
@@ -47,7 +52,7 @@ function startScanner() {
     });
 }
 
-// 處理打卡
+/** 處理打卡 */
 async function handleCheckin(employeeId, employeeName) {
   isSubmitting = true;
   const now = new Date();
@@ -57,8 +62,9 @@ async function handleCheckin(employeeId, employeeName) {
   statusEl.className = "status";
 
   try {
-    await stopScanner();
-    beepSound.play();
+    await stopScanner();      // 停止掃描器
+    beepSound.play();         // 播放音效
+
     statusEl.textContent = `${employeeName} 打卡成功 - ${timestamp}`;
     statusEl.className = "status success";
 
@@ -83,10 +89,12 @@ async function handleCheckin(employeeId, employeeName) {
     statusEl.textContent = "打卡失敗，請重新掃描";
     statusEl.className = "status error";
     restartBtn.style.display = "inline-block";
+  } finally {
+    isSubmitting = false;  // 無論成功失敗都允許重新掃描
   }
 }
 
-// QR Code 成功回調
+/** QR Code 成功回調 */
 function onScanSuccess(decodedText) {
   if (isSubmitting) return;
 
@@ -103,15 +111,18 @@ function onScanSuccess(decodedText) {
   handleCheckin(employeeId, employeeName);
 }
 
-// 重新掃描按鈕
+/** 重新掃描按鈕 */
 restartBtn.onclick = async () => {
-  restartBtn.style.display = "none"; // 隱藏按鈕
+  restartBtn.style.display = "none";
+  statusEl.textContent = "等待掃描...";
+  statusEl.className = "status";
+
   isSubmitting = false;
-  await stopScanner();
-  startScanner();
+  await stopScanner();  // 停止掃描器（保險做法）
+  startScanner();       // 重新啟動掃描器
 };
 
-// 下載 CSV
+/** 下載 CSV */
 downloadBtn.onclick = () => {
   if (records.length === 0) {
     alert("目前沒有打卡紀錄可下載！");
@@ -133,10 +144,9 @@ downloadBtn.onclick = () => {
   document.body.removeChild(link);
 };
 
-// 檢測攝影機
+/** 檢測攝影機並啟動掃描器 */
 Html5Qrcode.getCameras().then(cameras => {
   if (cameras && cameras.length) {
-    // 立即啟動掃描器
     startScanner();
   } else {
     statusEl.textContent = "桌機沒有攝影機，請用手機掃描";
