@@ -1,0 +1,17 @@
+<<<<<<< HEAD
+﻿body { font-family: Arial; padding: 20px; margin-bottom: 80px; }
+.status { margin-top: 10px; padding: 5px; border-radius: 5px; }
+.success { color: green; }
+.error { color: red; }
+#reader { width: 100%; max-width: 320px; margin: 0 auto; }
+button { margin: 5px; padding: 8px 16px; font-size: 14px; border-radius: 5px; cursor: pointer; }
+#downloadBtn { display: block; margin: 0 auto; position: fixed; bottom: 20px; left: 0; right: 0; width: 160px; }
+=======
+﻿body { font-family: Arial; padding: 20px; margin-bottom: 80px; }
+.status { margin-top: 10px; padding: 5px; border-radius: 5px; }
+.success { color: green; }
+.error { color: red; }
+#reader { width: 100%; max-width: 320px; margin: 0 auto; }
+button { margin: 5px; padding: 8px 16px; font-size: 14px; border-radius: 5px; cursor: pointer; }
+#downloadBtn { display: block; margin: 0 auto; position: fixed; bottom: 20px; left: 0; right: 0; width: 160px; }
+>>>>>>> 8f9a0f11e1d070087b09877468afd24450a9da07
