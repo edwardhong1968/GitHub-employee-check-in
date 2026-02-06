@@ -1,7 +1,8 @@
-﻿let isSubmitting = false;
+let isSubmitting = false;
 
 const statusEl = document.getElementById("status");
 const restartBtn = document.getElementById("restart");
+const downloadBtn = document.getElementById("downloadBtn");
 
 // 員工編號對應表
 const employeeMap = {
@@ -12,25 +13,28 @@ const employeeMap = {
   "567890": "李"
 };
 
+// 初始化掃描器
+const html5QrCode = new Html5Qrcode("reader");
+
+// 掃描成功處理函數
 function onScanSuccess(decodedText) {
   if (isSubmitting) return;
   isSubmitting = true;
 
-  const input = decodedText.trim();
-  let employeeId = input;
-  let employeeName = employeeMap[input] || input;
+  const employeeId = decodedText.trim();
+  const employeeName = employeeMap[employeeId];
 
   if (!employeeName) {
     statusEl.textContent = "未知員工，請重試";
     statusEl.className = "status error";
     restartBtn.hidden = false;
+    isSubmitting = false;
     return;
   }
 
-  statusEl.textContent = "打卡中...";
+  statusEl.textContent = `打卡中... (${employeeName})`;
   statusEl.className = "status";
 
-  // 呼叫後端打卡 API
   fetch("http://localhost:3000/api/checkin", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -55,29 +59,42 @@ function onScanSuccess(decodedText) {
     });
 }
 
-// 初始化掃描器
-const html5QrCode = new Html5Qrcode("reader");
-html5QrCode.start(
-  { facingMode: "environment" },
-  { fps: 10, qrbox: 220 },
-  onScanSuccess
-);
-
-// 重新掃描按鈕
-restartBtn.onclick = () => {
-  isSubmitting = false;
-  restartBtn.hidden = true;
-  statusEl.textContent = "等待掃描...";
-  statusEl.className = "status";
-
+// 啟動掃描器
+function startScanner() {
   html5QrCode.start(
     { facingMode: "environment" },
     { fps: 10, qrbox: 220 },
     onScanSuccess
-  );
+  ).catch(err => {
+    console.error("掃描器啟動失敗:", err);
+    statusEl.textContent = "掃描器啟動失敗";
+    statusEl.className = "status error";
+  });
+}
+
+// 停止掃描器
+function stopScanner() {
+  return html5QrCode.stop().catch(err => {
+    console.warn("掃描器停止失敗:", err);
+  });
+}
+
+// 初始啟動
+statusEl.textContent = "等待掃描...";
+statusEl.className = "status";
+startScanner();
+
+// 重新掃描按鈕
+restartBtn.onclick = async () => {
+  restartBtn.hidden = true;
+  statusEl.textContent = "等待掃描...";
+  statusEl.className = "status";
+  isSubmitting = false;
+  await stopScanner();
+  startScanner();
 };
 
 // 下載打卡紀錄按鈕
-document.getElementById("downloadBtn").onclick = () => {
+downloadBtn.onclick = () => {
   window.open("http://localhost:3000/api/download", "_blank");
 };
