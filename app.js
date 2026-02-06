@@ -21,15 +21,18 @@ const employeeMap = {
 
 const SERVER_URL = "https://你的後端公開網址";
 
-const html5QrCode = new Html5Qrcode("reader");
+let html5QrCode; // 改成動態建立
 
 /** 停止掃描器 */
 async function stopScanner() {
-  try {
-    await html5QrCode.stop();
-    console.log("掃描器已停止");
-  } catch (err) {
-    console.warn("掃描器停止失敗或已停止:", err);
+  if (html5QrCode) {
+    try {
+      await html5QrCode.stop();
+      await html5QrCode.clear(); // 清理 DOM
+      console.log("掃描器已停止");
+    } catch (err) {
+      console.warn("掃描器停止失敗或已停止:", err);
+    }
   }
 }
 
@@ -39,17 +42,23 @@ function startScanner() {
   statusEl.className = "status";
   restartBtn.style.display = "none"; // 隱藏重新掃描按鈕
 
-  html5QrCode.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 220 },
-    onScanSuccess
-  ).then(() => console.log("掃描器啟動成功"))
-    .catch(err => {
-      console.error("掃描器啟動失敗:", err);
-      statusEl.textContent = "請允許攝影機";
-      statusEl.className = "status error";
-      startBtn.style.display = "inline-block";
-    });
+  // 先停止舊掃描器，然後建立新實例
+  (async () => {
+    await stopScanner();
+    html5QrCode = new Html5Qrcode("reader");
+
+    html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 220 },
+      onScanSuccess
+    ).then(() => console.log("掃描器啟動成功"))
+      .catch(err => {
+        console.error("掃描器啟動失敗:", err);
+        statusEl.textContent = "請允許攝影機";
+        statusEl.className = "status error";
+        startBtn.style.display = "inline-block";
+      });
+  })();
 }
 
 /** 處理打卡 */
@@ -112,14 +121,10 @@ function onScanSuccess(decodedText) {
 }
 
 /** 重新掃描按鈕 */
-restartBtn.onclick = async () => {
+restartBtn.onclick = () => {
   restartBtn.style.display = "none";
-  statusEl.textContent = "等待掃描...";
-  statusEl.className = "status";
-
   isSubmitting = false;
-  await stopScanner();  // 停止掃描器（保險做法）
-  startScanner();       // 重新啟動掃描器
+  startScanner(); // 直接呼叫 startScanner 會重新建立掃描器
 };
 
 /** 下載 CSV */
