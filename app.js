@@ -44,23 +44,29 @@ function onScanSuccess(decodedText) {
     body: JSON.stringify({ employeeId, name: employeeName })
   })
     .then(res => res.json())
-    .then(data => {
-      // 無論後端回傳什麼，前端顯示「姓名 + 打卡成功」
+    .then(async data => {
       if (data.status === "success") {
+        // 成功 → 顯示姓名 + 成功訊息，播放提示音
         statusEl.textContent = `${employeeName} 打卡成功`;
         statusEl.className = "status success";
         beepSound.play();
+
+        // 停止掃描器
+        await stopScanner();
       } else {
+        // 失敗 → 顯示錯誤，保持掃描器
         statusEl.textContent = `${employeeName} 打卡失敗，請重試`;
         statusEl.className = "status error";
+        restartBtn.hidden = false;
+        isSubmitting = false; // 允許再次掃描
       }
-      restartBtn.hidden = false;
     })
     .catch(err => {
       console.error(err);
       statusEl.textContent = `${employeeName} 打卡失敗，請重試`;
       statusEl.className = "status error";
       restartBtn.hidden = false;
+      isSubmitting = false; // 允許再次掃描
     });
 }
 
