@@ -32,18 +32,19 @@ async function stopScanner() {
 function startScanner() {
   statusEl.textContent = "等待掃描...";
   statusEl.className = "status";
+  restartBtn.hidden = true;
 
   html5QrCode.start(
     { facingMode: "environment" },
     { fps: 10, qrbox: 220 },
     onScanSuccess
   ).then(() => console.log("掃描器啟動成功"))
-  .catch(err => {
-    console.error("掃描器啟動失敗:", err);
-    statusEl.textContent = "請允許攝影機";
-    statusEl.className = "status error";
-    startBtn.hidden = false;
-  });
+    .catch(err => {
+      console.error("掃描器啟動失敗:", err);
+      statusEl.textContent = "請允許攝影機";
+      statusEl.className = "status error";
+      startBtn.hidden = false;
+    });
 }
 
 // 處理打卡
@@ -65,6 +66,9 @@ async function handleCheckin(employeeId, employeeName) {
     records.push({ employeeId, employeeName, timestamp });
     localStorage.setItem("checkinRecords", JSON.stringify(records));
 
+    // 顯示重新掃描按鈕
+    restartBtn.hidden = false;
+
     // 後端同步
     fetch(`${SERVER_URL}/api/checkin`, {
       method: "POST",
@@ -76,15 +80,10 @@ async function handleCheckin(employeeId, employeeName) {
 
   } catch (err) {
     console.error(err);
-    statusEl.textContent = "打卡失敗，請重試";
+    statusEl.textContent = "打卡失敗，請重新掃描";
     statusEl.className = "status error";
+    restartBtn.hidden = false;
   }
-
-  // 自動倒數 3 秒重新啟動掃描器
-  setTimeout(() => {
-    isSubmitting = false;
-    startScanner();
-  }, 3000);
 }
 
 // QR Code 成功回調
@@ -97,15 +96,20 @@ function onScanSuccess(decodedText) {
   if (!employeeName) {
     statusEl.textContent = `未知員工: ${decodedText}`;
     statusEl.className = "status error";
-    // 3 秒後自動重新掃描
-    setTimeout(() => {
-      startScanner();
-    }, 3000);
+    restartBtn.hidden = false;
     return;
   }
 
   handleCheckin(employeeId, employeeName);
 }
+
+// 重新掃描按鈕
+restartBtn.onclick = async () => {
+  restartBtn.hidden = true;
+  isSubmitting = false;
+  await stopScanner();
+  startScanner();
+};
 
 // 下載 CSV
 downloadBtn.onclick = () => {
@@ -132,6 +136,7 @@ downloadBtn.onclick = () => {
 // 檢測攝影機
 Html5Qrcode.getCameras().then(cameras => {
   if (cameras && cameras.length) {
+    // 立即啟動掃描器
     startScanner();
   } else {
     statusEl.textContent = "桌機沒有攝影機，請用手機掃描";
