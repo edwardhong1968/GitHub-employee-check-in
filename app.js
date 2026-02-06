@@ -32,7 +32,7 @@ async function stopScanner() {
 function startScanner() {
   statusEl.textContent = "等待掃描...";
   statusEl.className = "status";
-  restartBtn.hidden = true;
+  restartBtn.style.display = "none"; // 隱藏重新掃描按鈕
 
   html5QrCode.start(
     { facingMode: "environment" },
@@ -43,7 +43,7 @@ function startScanner() {
       console.error("掃描器啟動失敗:", err);
       statusEl.textContent = "請允許攝影機";
       statusEl.className = "status error";
-      startBtn.hidden = false;
+      startBtn.style.display = "inline-block";
     });
 }
 
@@ -67,7 +67,7 @@ async function handleCheckin(employeeId, employeeName) {
     localStorage.setItem("checkinRecords", JSON.stringify(records));
 
     // 顯示重新掃描按鈕
-    restartBtn.hidden = false;
+    restartBtn.style.display = "inline-block";
 
     // 後端同步
     fetch(`${SERVER_URL}/api/checkin`, {
@@ -82,7 +82,7 @@ async function handleCheckin(employeeId, employeeName) {
     console.error(err);
     statusEl.textContent = "打卡失敗，請重新掃描";
     statusEl.className = "status error";
-    restartBtn.hidden = false;
+    restartBtn.style.display = "inline-block";
   }
 }
 
@@ -96,7 +96,7 @@ function onScanSuccess(decodedText) {
   if (!employeeName) {
     statusEl.textContent = `未知員工: ${decodedText}`;
     statusEl.className = "status error";
-    restartBtn.hidden = false;
+    restartBtn.style.display = "inline-block";
     return;
   }
 
@@ -105,7 +105,7 @@ function onScanSuccess(decodedText) {
 
 // 重新掃描按鈕
 restartBtn.onclick = async () => {
-  restartBtn.hidden = true;
+  restartBtn.style.display = "none"; // 隱藏按鈕
   isSubmitting = false;
   await stopScanner();
   startScanner();
@@ -141,9 +141,9 @@ Html5Qrcode.getCameras().then(cameras => {
   } else {
     statusEl.textContent = "桌機沒有攝影機，請用手機掃描";
     statusEl.className = "status error";
-    startBtn.hidden = false;
+    startBtn.style.display = "inline-block";
     startBtn.onclick = () => {
-      startBtn.hidden = true;
+      startBtn.style.display = "none";
       startScanner();
     };
   }
@@ -151,9 +151,9 @@ Html5Qrcode.getCameras().then(cameras => {
   console.error(err);
   statusEl.textContent = "無法檢測攝影機";
   statusEl.className = "status error";
-  startBtn.hidden = false;
+  startBtn.style.display = "inline-block";
   startBtn.onclick = () => {
-    startBtn.hidden = true;
+    startBtn.style.display = "none";
     startScanner();
   };
 });
