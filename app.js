@@ -16,6 +16,10 @@ const employeeMap = {
   "567890": "李"
 };
 
+// **設定你的伺服器 IP 或域名**
+// 例如電腦局域網 IP: 192.168.1.100
+const SERVER_URL = "http://192.168.1.100:3000";
+
 // 初始化掃描器
 const html5QrCode = new Html5Qrcode("reader");
 
@@ -38,35 +42,33 @@ function onScanSuccess(decodedText) {
   statusEl.textContent = `打卡中... (${employeeName})`;
   statusEl.className = "status";
 
-  fetch("http://localhost:3000/api/checkin", {
+  fetch(`${SERVER_URL}/api/checkin`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ employeeId, name: employeeName })
   })
     .then(res => res.json())
     .then(async data => {
+      console.log("後端回傳:", data); // <-- 印出完整回傳
+      // 成功判斷
       if (data.status === "success") {
-        // 成功 → 顯示姓名 + 成功訊息，播放提示音
         statusEl.textContent = `${employeeName} 打卡成功`;
         statusEl.className = "status success";
         beepSound.play();
-
-        // 停止掃描器
-        await stopScanner();
+        await stopScanner(); // 成功後停止掃描
       } else {
-        // 失敗 → 顯示錯誤，保持掃描器
         statusEl.textContent = `${employeeName} 打卡失敗，請重試`;
         statusEl.className = "status error";
         restartBtn.hidden = false;
-        isSubmitting = false; // 允許再次掃描
+        isSubmitting = false;
       }
     })
     .catch(err => {
-      console.error(err);
+      console.error("Fetch 錯誤:", err);
       statusEl.textContent = `${employeeName} 打卡失敗，請重試`;
       statusEl.className = "status error";
       restartBtn.hidden = false;
-      isSubmitting = false; // 允許再次掃描
+      isSubmitting = false;
     });
 }
 
@@ -107,5 +109,5 @@ restartBtn.onclick = async () => {
 
 // 下載打卡紀錄按鈕
 downloadBtn.onclick = () => {
-  window.open("http://localhost:3000/api/download", "_blank");
+  window.open(`${SERVER_URL}/api/download`, "_blank");
 };
