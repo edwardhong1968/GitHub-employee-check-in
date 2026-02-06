@@ -1,13 +1,13 @@
 ﻿let isSubmitting = false;
 
 const statusEl = document.getElementById("status");
+const readerEl = document.getElementById("reader");
+const startBtn = document.getElementById("startBtn");
 const restartBtn = document.getElementById("restart");
 const downloadBtn = document.getElementById("downloadBtn");
 
-// 打卡成功提示音
 const beepSound = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
 
-// 員工對照表
 const employeeMap = {
   "123456": "周",
   "234567": "洪",
@@ -18,10 +18,8 @@ const employeeMap = {
   "徐德興": "徐德興"
 };
 
-// 公網後端 API（替換成你的公開網址）
 const SERVER_URL = "https://你的後端公開網址";
 
-// 初始化掃描器
 const html5QrCode = new Html5Qrcode("reader");
 
 // 停止掃描器
@@ -33,18 +31,17 @@ async function stopScanner() {
 function startScanner() {
   statusEl.textContent = "等待掃描...";
   statusEl.className = "status";
-
+  
   html5QrCode.start(
     { facingMode: "environment" },
     { fps: 10, qrbox: 220 },
     onScanSuccess
-  )
-  .then(() => console.log("掃描器啟動成功"))
+  ).then(() => console.log("掃描器啟動成功"))
   .catch(err => {
     console.error("掃描器啟動失敗:", err);
-    statusEl.textContent = "掃描器啟動失敗，請允許攝影機";
+    statusEl.textContent = "請允許攝影機";
     statusEl.className = "status error";
-    alert("無法啟動掃描器，請確認攝影機權限或使用 HTTPS");
+    startBtn.hidden = false; // 顯示手動啟動按鈕
   });
 }
 
@@ -67,30 +64,22 @@ function onScanSuccess(decodedText) {
   statusEl.textContent = `打卡中... (${employeeName})`;
   statusEl.className = "status";
 
-  // 前端立即顯示成功
   setTimeout(async () => {
     statusEl.textContent = `${employeeName} 打卡成功`;
     statusEl.className = "status success";
     beepSound.play();
-
-    // 停止掃描器
     await stopScanner();
 
-    // 同步傳送打卡資料到後端
+    // 後端同步
     fetch(`${SERVER_URL}/api/checkin`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ employeeId, name: employeeName })
-    })
-    .then(res => res.json())
-    .then(data => console.log("後端回傳:", data))
-    .catch(err => console.error("Fetch 錯誤:", err));
-
+    }).then(res => res.json())
+      .then(data => console.log("後端回傳:", data))
+      .catch(err => console.error("Fetch 錯誤:", err));
   }, 500);
 }
-
-// 初始啟動
-startScanner();
 
 // 重新掃描
 restartBtn.onclick = async () => {
@@ -104,3 +93,29 @@ restartBtn.onclick = async () => {
 downloadBtn.onclick = () => {
   window.open(`${SERVER_URL}/api/download`, "_blank");
 };
+
+// 檢測攝影機
+Html5Qrcode.getCameras().then(cameras => {
+  if (cameras && cameras.length) {
+    // 手機有攝影機，自動啟動
+    startScanner();
+  } else {
+    // 桌機或無攝影機
+    statusEl.textContent = "桌機沒有攝影機，請用手機掃描";
+    statusEl.className = "status error";
+    startBtn.hidden = false; // 顯示手動啟動按鈕
+    startBtn.onclick = () => {
+      startBtn.hidden = true;
+      startScanner();
+    };
+  }
+}).catch(err => {
+  console.error(err);
+  statusEl.textContent = "無法檢測攝影機";
+  statusEl.className = "status error";
+  startBtn.hidden = false;
+  startBtn.onclick = () => {
+    startBtn.hidden = true;
+    startScanner();
+  };
+});
