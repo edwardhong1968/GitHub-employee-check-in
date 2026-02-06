@@ -49,31 +49,30 @@ function onScanSuccess(decodedText) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ employeeId, name: employeeName })
   })
-.then(res => res.json())
-.then(async data => {
-  console.log("後端回傳:", data); // 印出完整回傳，方便偵錯
-
-  // 無論後端回傳什麼，只要掃描成功就顯示成功
-  statusEl.textContent = `${employeeName} 打卡成功`;
-  statusEl.className = "status success";
-  beepSound.play();
-
-  // 成功後停止掃描器
-  await stopScanner();
-
-  // 如果後端回傳有錯誤訊息，也可以在 console.log 查看
-  if (data.status && data.status !== "success") {
-    console.warn("後端回傳非 success:", data);
-  }
-})
-.catch(err => {
-  console.error("Fetch 錯誤:", err);
-  // 打卡失敗才顯示錯誤訊息
-  statusEl.textContent = `${employeeName} 打卡失敗，請重試`;
-  statusEl.className = "status error";
-  restartBtn.hidden = false;
-  isSubmitting = false; // 允許再次掃描
-});
+    .then(res => res.json())
+    .then(async data => {
+      console.log("後端回傳:", data); // <-- 印出完整回傳
+      // 成功判斷
+      if (data.status === "success") {
+        statusEl.textContent = `${employeeName} 打卡成功`;
+        statusEl.className = "status success";
+        beepSound.play();
+        await stopScanner(); // 成功後停止掃描
+      } else {
+        statusEl.textContent = `${employeeName} 打卡失敗，請重試`;
+        statusEl.className = "status error";
+        restartBtn.hidden = false;
+        isSubmitting = false;
+      }
+    })
+    .catch(err => {
+      console.error("Fetch 錯誤:", err);
+      statusEl.textContent = `${employeeName} 打卡失敗，請重試`;
+      statusEl.className = "status error";
+      restartBtn.hidden = false;
+      isSubmitting = false;
+    });
+}
 
 // 啟動掃描器
 function startScanner() {
