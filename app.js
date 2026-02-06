@@ -7,7 +7,7 @@ const downloadBtn = document.getElementById("downloadBtn");
 // 打卡成功提示音
 const beepSound = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
 
-// 員工對照表 (可自行擴充)
+// 員工對照表
 const employeeMap = {
   "123456": "周",
   "234567": "洪",
@@ -31,14 +31,20 @@ async function stopScanner() {
 
 // 啟動掃描器
 function startScanner() {
+  statusEl.textContent = "等待掃描...";
+  statusEl.className = "status";
+
   html5QrCode.start(
-    { facingMode: "environment" },
+    { facingMode: "environment" }, // 使用後鏡頭
     { fps: 10, qrbox: 220 },
     onScanSuccess
-  ).catch(err => {
+  )
+  .then(() => console.log("掃描器啟動成功"))
+  .catch(err => {
     console.error("掃描器啟動失敗:", err);
-    statusEl.textContent = "掃描器啟動失敗";
+    statusEl.textContent = "掃描器啟動失敗，請允許攝影機使用";
     statusEl.className = "status error";
+    alert("無法啟動掃描器，請確認攝影機權限或使用 HTTPS / 局域網 IP");
   });
 }
 
@@ -68,7 +74,7 @@ function onScanSuccess(decodedText) {
     statusEl.className = "status success";
     beepSound.play();
 
-    // 停止掃描器，避免重複掃描
+    // 成功後停止掃描器
     await stopScanner();
 
     // 同步傳送打卡資料到後端
@@ -85,15 +91,11 @@ function onScanSuccess(decodedText) {
 }
 
 // 初始啟動掃描器
-statusEl.textContent = "等待掃描...";
-statusEl.className = "status";
 startScanner();
 
 // 重新掃描按鈕
 restartBtn.onclick = async () => {
   restartBtn.hidden = true;
-  statusEl.textContent = "等待掃描...";
-  statusEl.className = "status";
   isSubmitting = false;
   await stopScanner();
   startScanner();
