@@ -4,21 +4,21 @@
 <meta charset="UTF-8">
 <title>員工打卡系統</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://unpkg.com/html5-qrcode"></script>
 <link rel="stylesheet" href="style.css">
+
+<!-- HTML5 QR Code -->
+<script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
 
 <h1>📋 員工打卡系統</h1>
 <p>請掃描 QR Code 打卡</p>
 
-<div id="status" class="status">等待打卡...</div>
-<div id="reader"></div>
+<div id="status" class="status">等待掃描...</div>
+<div id="reader" style="width:300px;height:300px;"></div>
 
-<div class="buttons">
-  <button id="restart" hidden>重新掃描</button>
-  <button id="downloadBtn">下載打卡紀錄</button>
-</div>
+<button id="restart" hidden>重新掃描</button>
+<button id="downloadBtn">下載打卡紀錄</button>
 
 <script src="app.js"></script>
 </body>
