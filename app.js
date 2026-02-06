@@ -1,8 +1,11 @@
-let isSubmitting = false;
+﻿let isSubmitting = false;
 
 const statusEl = document.getElementById("status");
 const restartBtn = document.getElementById("restart");
 const downloadBtn = document.getElementById("downloadBtn");
+
+// 打卡成功提示音
+const beepSound = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
 
 // 員工編號對應表
 const employeeMap = {
@@ -45,6 +48,7 @@ function onScanSuccess(decodedText) {
       if (data.status === "success") {
         statusEl.textContent = data.message;
         statusEl.className = "status success";
+        beepSound.play(); // 播放提示音
       } else {
         statusEl.textContent = "打卡失敗，請重試";
         statusEl.className = "status error";
